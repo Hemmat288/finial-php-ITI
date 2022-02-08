@@ -1,7 +1,7 @@
 <?php
- if(isset($_GET['error'])){
+        if(isset($_GET['errorArray'])){
                echo" <h2>Welcome  {$_COOKIE["fname"]}</h2>" ;
-
+             $sudent = json_decode("",true);
         }
        
 

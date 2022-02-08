@@ -1,12 +1,8 @@
 <?php
-
-//////////connection
-try{
-$connection = new pdo("mysql:host=localhost;dbname=phpQena", "root","");
-}catch(PDOException $e){
-echo $e;
-}
-
+require("db.php");
+  $db=new db();
+  $connection=$db->get_connection();
+ 
 
 ////////////////addstudent
 
@@ -19,7 +15,7 @@ try{
  $email=validation($_POST['email']);
  $address=validation($_POST['address']);
  $Password=validation($_POST['Password']);
- $imgName=validation($_FILES["name"]);
+   $imgName=validation($_FILES["img"]["name"]);
 
   $error=[];
 
@@ -59,18 +55,15 @@ if(count($error)>0){
     }
 
  else {
-      $stm = $connection->prepare("
-   
-      insert into  student set
-       fname = ?,
-        lname=?, 
-        email=?,
-         address=?,
-         Password=?,
-         imgName=?
-");
-      $stm->execute([$fname, $lname, $email, $address,$Password,$imgName]);
-       header("location:list.php");
+   $db->insert("student","
+       fname = '$fname',
+        lname='$lname', 
+        email='$email',
+         address='$address',
+         password='$password',
+         imgName='$imgName'"
+);    
+      header("location:list.php");
     }
 }catch(PDOException $e){
 echo $e;
@@ -88,8 +81,9 @@ else if(isset($_GET['delete'])){
  $id=$_GET['id'];
  
 try{
+ 
 
-$connection->query(" delete  from  student where id=$id");
+ $db->delete("student","id=$id");
   header("location:list.php");
 
 }catch(PDOException $e){
@@ -103,7 +97,7 @@ $connection = null;
 else if(isset($_GET['show'])){
 $id=$_GET['id'];
 try {  
- $sudentData=$connection->query("select * from  student where id=$id");
+  $sudentData=$db->select("*","student","id=$id");
   $studentinfo=$sudentData->fetch(PDO::FETCH_ASSOC);
    $data=json_encode($studentinfo);
    header("location:show.php?data=$data");
@@ -113,23 +107,24 @@ try {
   $connection = null;
 }
 
-/////////////////edit
+// /////////////////edit
 
 else if(isset($_GET['edit'])){
 $id=$_GET['id'];
 try {  
- $sudentData=$connection->query("select * from  student where id=$id");
+ $sudentData=$db->select("*","student","id=$id");
+ 
   $studentinfo=$sudentData->fetch(PDO::FETCH_ASSOC);
    $data=json_encode($studentinfo);
    header("location:edit.php?data=$data");
 }catch(PDOException $e){
- 
+ echo $e;
   }
   $connection = null;
 }
 
 
-//////////////update
+// //////////////update
 
 else if (isset($_GET['update'])){
 try{
@@ -138,7 +133,7 @@ try{
  $lname=validation($_GET['lname']);
  $email=validation($_GET['email']);
  $address=validation($_GET['address']);
-
+  $error=[];
  if(strlen($fname)<3){
        $error["fname"] = "first name must be more than 3 char";
  }
@@ -152,28 +147,18 @@ if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
 }
  
 if(count($error)>0){
+  
        $errorArray = json_encode($error);
-            if(isset($error["fname"])){
-           echo $error["fname"]."<br>";
-         } 
-            if(isset($error["lname"])){
-           echo $error["lname"]."<br>";
-         }
-
-              if(isset($error["email"])){
-           echo $error["email"]."<br>";
-         }  
+ 
+  header("location:edit.php?errorArray=$errorArray&id='$id'");
 }
 else{
-$sudentData=$connection->query("update student
-set fname='$fname',
+  $sudentData=$db->update("student","
+  fname='$fname',
      lname='$lname',
      email='$email',
      address='$address'
-where id= $id;
-");
- // var_dump($sudentData);
-
+  ","id= $id");
      header("location:list.php");
 }
 }catch(PDOException $e){
@@ -181,15 +166,17 @@ echo $e;
 }
 }
 
-////////////////////login
-if(isset($_POST['login'])){
-   $sudentData=$connection->query("select * from  student where email='{$_POST['email']}' and password='{$_POST['Password']}'");
- $studentinfo=$sudentData->fetch(PDO::FETCH_ASSOC);
+// ////////////////////login
+else if(isset($_POST['login'])){
+
+    
+ $sudentData=$db->select( "*" ,"student" ,"email='{$_POST['email']}' and password='{$_POST['Password']}'");
+$studentinfo=$sudentData->fetch(PDO::FETCH_ASSOC);
    $email=$studentinfo["email"];
   $password=$studentinfo["password"];
   //////////////// $ sudentData check not work with me
     if($password!="" && $email!=""){
-     setcookie("fname",$studentinfo["fname"]);
+     
     header("location:list.php");
   }else{
     header("location:login.php");
@@ -201,7 +188,7 @@ if(isset($_POST['login'])){
 
 
 
-///////////////////validation
+/////////////////validation
 function validation($data){
   //// delete  html code - // - space 
   $data = htmlspecialchars(stripcslashes(trim($data)));

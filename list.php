@@ -1,6 +1,11 @@
 <html>
     <body>
         <?php 
+        
+    require("db.php");
+    $db=new db();
+    $connection=$db->get_connection();
+
         if($_COOKIE["fname"]){
                echo" <h2>Welcome  {$_COOKIE["fname"]}</h2>" ;
         }
@@ -28,15 +33,13 @@
 <?php
 
 try{
-$pdo = new pdo("mysql:host=localhost;dbname=phpQena", "root","");
 
- $data =$pdo->query(" select * from  student");
- 
+  $data =$db->show("*","student");
 while($row=$data->fetch(PDO::FETCH_ASSOC)){
     echo "<tr>";
- foreach($row as $key => $value ){
+ foreach($row as $key => $val ){
      if($key!= "password"){
-     echo "<td> $value </td>";
+     echo "<td> $val </td>";
  }
 }
 echo "<td><a href='studentController.php?id={$row['id']}&show'>show</a></td>";
@@ -47,10 +50,10 @@ echo "<td><a href='studentController.php?id={$row['id']}&delete'>delete</a></td>
 
 
 }catch(PDOException $e){
-echo $e->getMesage();
+echo $e;
 }
 
-$pdo = null;
+$connection = null;
 ?>
 
 
