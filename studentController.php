@@ -166,7 +166,10 @@ else if(isset($_POST['login'])){
 
     
 $sudentData=$db->select( "*" ,"student" ,"email='{$_POST['email']}' and password='{$_POST['Password']}'");
-    if($sudentData){   
+ $studentinfo=$sudentData->fetch(PDO::FETCH_ASSOC);
+   $email=$studentinfo["email"];
+  $password=$studentinfo["password"];
+    if($password!="" && $email!=""){
        setcookie("fname",$studentinfo["fname"]);
     header("location:list.php");
   }else{
