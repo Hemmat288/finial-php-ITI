@@ -1,8 +1,9 @@
 <?php
 require("db.php");
+require("student.php");
   $db=new db();
   $connection=$db->get_connection();
- 
+ $student=new student();
 
 ////////////////addstudent
 
@@ -10,33 +11,15 @@ if(isset($_POST['addstudent'])){
 
 try{
  
- $fname=validation($_POST['fname']);
- $lname=validation($_POST['lname']);
- $email=validation($_POST['email']);
- $address=validation($_POST['address']);
- $Password=validation($_POST['Password']);
-   $imgName=validation($_FILES["img"]["name"]);
-
-  $error=[];
-
-
+$student->fname=$student->validation($_POST['fname']);
+$student->lname=$student->validation($_POST['lname']);
+$student->address=$student->validation($_POST['address']);
+$student->email=$student->validation($_POST['email']);
+$student->Password=$student->validation($_POST['Password']);
+$student->imgName=$student->validation($_FILES["img"]["name"]);
+  $error=$student->countError();
  
- if(strlen($fname)<3){
-       $error["fname"] = "first name must be more than 3 char";
- }
 
- if(strlen($lname)<3){
-  $error["lname"] = "last name must be more than 3 char";
- }
- 
-if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
-     $error["email"] = "pls enter valid email";
-}
- 
-if(count($error)>0){
-       $errorArray = json_encode($error);
-      header("location:addStudent.php?error=$errorArray");
-}
 
  $imgExtension= pathinfo($_FILES["img"]["name"],PATHINFO_EXTENSION);
  
@@ -53,17 +36,28 @@ if(count($error)>0){
     $_FILES["img"]["name"])){
       $error["img"]="img is not exists";
     }
-
+if($error>0){
+       $errorArray = json_encode($student->error);
+      header("location:addStudent.php?errorArray=$errorArray");
+}
  else {
+ $fname= $student->fname;
+ $lname=$student->lname;
+$address=$student->address;
+$email=$student->email;
+$password=$student->password;
+$imgName=$student->imgName;
+
+
    $db->insert("student","
-       fname = '$fname',
+       fname ='$fname',
         lname='$lname', 
         email='$email',
          address='$address',
          password='$password',
          imgName='$imgName'"
 );    
-      header("location:list.php");
+     header("location:list.php?fname?$fname");
     }
 }catch(PDOException $e){
 echo $e;
@@ -102,7 +96,7 @@ try {
    $data=json_encode($studentinfo);
    header("location:show.php?data=$data");
 }catch(PDOException $e){
- 
+
   }
   $connection = null;
 }
@@ -128,38 +122,39 @@ try {
 
 else if (isset($_GET['update'])){
 try{
-  $id=validation($_GET['id']);
- $fname=validation($_GET['fname']);
- $lname=validation($_GET['lname']);
- $email=validation($_GET['email']);
- $address=validation($_GET['address']);
-  $error=[];
- if(strlen($fname)<3){
-       $error["fname"] = "first name must be more than 3 char";
- }
-
- if(strlen($lname)<3){
-  $error["lname"] = "last name must be more than 3 char";
- }
- 
-if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
-     $error["email"] = "pls enter valid email";
-}
- 
-if(count($error)>0){
   
-       $errorArray = json_encode($error);
+ $student->id=$student->validation($_GET['id']);
+ $student->fname=$student->validation($_GET['fname']);
+$student->lname=$student->validation($_GET['lname']);
+$student->address=$student->validation($_GET['address']);
+$student->email=$student->validation($_GET['email']);
+$student->Password=$student->validation($_GET['Password']);
+$student->imgName=$student->validation($_FILES["img"]["name"]);
+  $error=$student->countError();
+ 
+ 
+if( $error>0){
+  
+       $errorArray = json_encode($student->error);
  
   header("location:edit.php?errorArray=$errorArray&id='$id'");
 }
 else{
+  $id= $student->id;
+$fname= $student->fname;
+$lname=$student->lname;
+$address=$student->address;
+$email=$student->email;
+$password=$student->password;
+$imgName=$student->imgName;
   $sudentData=$db->update("student","
   fname='$fname',
      lname='$lname',
      email='$email',
      address='$address'
   ","id= $id");
-     header("location:list.php");
+  
+     header("location:list.php?length=$er");
 }
 }catch(PDOException $e){
 echo $e;
@@ -170,13 +165,9 @@ echo $e;
 else if(isset($_POST['login'])){
 
     
- $sudentData=$db->select( "*" ,"student" ,"email='{$_POST['email']}' and password='{$_POST['Password']}'");
-$studentinfo=$sudentData->fetch(PDO::FETCH_ASSOC);
-   $email=$studentinfo["email"];
-  $password=$studentinfo["password"];
-  //////////////// $ sudentData check not work with me
-    if($password!="" && $email!=""){
-     
+$sudentData=$db->select( "*" ,"student" ,"email='{$_POST['email']}' and password='{$_POST['Password']}'");
+    if($sudentData){   
+       setcookie("fname",$studentinfo["fname"]);
     header("location:list.php");
   }else{
     header("location:login.php");
@@ -188,10 +179,5 @@ $studentinfo=$sudentData->fetch(PDO::FETCH_ASSOC);
 
 
 
-/////////////////validation
-function validation($data){
-  //// delete  html code - // - space 
-  $data = htmlspecialchars(stripcslashes(trim($data)));
-  return $data;
-}
+
  ?>

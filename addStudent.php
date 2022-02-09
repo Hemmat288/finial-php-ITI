@@ -1,7 +1,10 @@
+
 <?php
- if(isset($_POST['error'])){
-  $error=json_decode(($_POST['error']),true);
-  
+ 
+
+if(isset($_REQUEST['errorArray'])){
+  $error=json_decode(($_REQUEST['errorArray']),true);
+ 
  }
 
        if($_COOKIE["fname"]){
@@ -40,7 +43,7 @@
        <br>
          <br>
         <input type="submit" value="Add student" name="addstudent">
-            
+        
             </form>
 </body>
 </html>
